@@ -1,38 +1,63 @@
+// import { getToken } from "next-auth/jwt";
+// import { NextRequest, NextResponse } from "next/server";
 
+// const protectedPages = ['/profile', '/wishlist', '/cart' , '/checkout'];
+// const protectedAuth = ['/login', '/register'];
 
+// export default async function middleware(req: NextRequest) {
+
+//     const token = await getToken({ req, secret: process.env.NextAUTH_SECRET });
+//     console.log("Token: ", token);
+
+//     if (protectedPages.includes(req.nextUrl.pathname)) {
+//         if (token) {
+//             return NextResponse.next();
+//         } else {
+//             const redirectUrl = new URL('/login', process.env.NEXTAUTH_URL);
+//             redirectUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
+//             return NextResponse.redirect(redirectUrl);
+//         }
+//     }
+
+//     if (protectedAuth.includes(req.nextUrl.pathname)) {
+//         if (!token) {
+//             return NextResponse.next();
+//         } else {
+//             const redirectUrl = new URL('/', process.env.NEXTAUTH_URL);
+//             return NextResponse.redirect(redirectUrl);
+//         }
+//     }
+
+//     return NextResponse.next();
+
+// }
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedPages = ['/profile', '/wishlist', '/cart' , '/checkout']; 
-const protectedAuth = ['/login', '/register']; 
+const protectedPages = ["/profile", "/wishlist", "/cart", "/checkout"];
+const protectedAuth = ["/login", "/register"];
 
 export default async function middleware(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-
-    const token = await getToken({ req, secret: process.env.NextAUTH_SECRET });
-    console.log("Token: ", token);
-
-
-    if (protectedPages.includes(req.nextUrl.pathname)) {
-        if (token) {
-            return NextResponse.next();
-        } else {
-            const redirectUrl = new URL('/login', process.env.NEXTAUTH_URL);
-            redirectUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
-            return NextResponse.redirect(redirectUrl);
-        }
+  if (protectedPages.includes(req.nextUrl.pathname)) {
+    if (!token) {
+      const redirectUrl = new URL("/login", req.url);
+      redirectUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
     }
-
-
-    if (protectedAuth.includes(req.nextUrl.pathname)) {
-        if (!token) {
-            return NextResponse.next();
-        } else {
-            const redirectUrl = new URL('/', process.env.NEXTAUTH_URL);
-            return NextResponse.redirect(redirectUrl);
-        }
-    }
-
     return NextResponse.next();
+  }
 
+  if (protectedAuth.includes(req.nextUrl.pathname)) {
+    if (token) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
 }
